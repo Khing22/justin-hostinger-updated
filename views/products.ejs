@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> — stock-pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/products.css">
+</head>
+<body>
+  <div class="app">
+    <%- include("partials/sidebar") %>
+    <main class="main">
+      <%- include("partials/header") %>
+      <section class="content">
+<div class="page-heading">
+  <div>
+    <h1>Products</h1>
+    <p><%= isAdmin ? 'Manage your products, stock levels and suppliers.' : 'Browse the live product catalogue and stock levels for sales.' %></p>
+  </div>
+  <% if (isAdmin) { %>
+    <a class="btn-primary" href="#add">+ Add Product</a>
+  <% } %>
+</div>
+<section class="card">
+  <div class="filters large">
+    <input id="productSearchPage" type="search" placeholder="⌕  Search products...">
+    <div class="barcode-tools">
+      <input id="barcodeInput" type="search" placeholder="Scan or enter barcode / Inventory ID" aria-label="Barcode">
+      <button class="btn-secondary" id="startBarcodeScanner" type="button">Scan Camera</button>
+      <button class="btn-secondary" id="stopBarcodeScanner" type="button" hidden>Stop Scanner</button>
+    </div>
+    <video id="barcodeVideo" class="barcode-video" autoplay muted playsinline hidden></video>
+    <% if (isAdmin) { %>
+      <% const productCategories = [...new Set(products.map(p => p.category).filter(Boolean))].sort(); %>
+      <% const productSuppliers = [...new Set(products.map(p => p.supplier).filter(Boolean))].sort(); %>
+      <select id="productCategoryFilter" aria-label="Filter by category">
+        <option value="">All Categories</option>
+        <% productCategories.forEach(category => { %><option value="<%= category %>"><%= category %></option><% }) %>
+      </select>
+      <select id="productSupplierFilter" aria-label="Filter by supplier">
+        <option value="">All Suppliers</option>
+        <% productSuppliers.forEach(supplier => { %><option value="<%= supplier %>"><%= supplier %></option><% }) %>
+      </select>
+    <% } %>
+  </div>
+  <% if (isAdmin) { %>
+  <div class="bulk-product-actions">
+    <span id="selectedProductCount">0 products selected</span>
+    <button class="action delete" id="deleteSelectedProducts" type="button" disabled>Delete Selected</button>
+  </div>
+  <% } %>
+  <div class="table-wrap">
+    <table id="productsPageTable">
+      <thead><tr><% if (isAdmin) { %><th><label class="select-all-label"><input id="selectAllProducts" type="checkbox" aria-label="Select all products"></label></th><% } %><th>Inventory ID</th><th>Product</th><th>Category</th><th>Supplier</th><th>Barcode</th><th>Price</th><th>Colour</th><th>Quantity</th><% if (isAdmin) { %><th>Actions</th><% } %></tr></thead>
+      <tbody>
+        <% products.forEach(p => { %>
+        <tr data-product-id="<%= p.id %>" data-inventory-id="<%= p.inventoryId || '' %>" data-barcode="<%= p.barcode || p.inventoryId || '' %>" data-product-name="<%= p.name %>" data-product-category="<%= p.category %>" data-product-supplier="<%= p.supplier %>" data-product-price="<%= p.price %>" data-product-colour="<%= p.colour || '' %>" data-product-stock="<%= p.stock %>"><% if (isAdmin) { %><td data-label="Select"><input class="product-select" name="productIds" value="<%= p.id %>" type="checkbox" aria-label="Select <%= p.name %>"></td><% } %><td data-label="Inventory ID"><strong><%= p.inventoryId || '—' %></strong></td><td data-label="Product"><span class="table-product"><% if (p.image) { %><img class="mini-thumb product-image" src="<%= p.image %>" alt=""><% } else { %><span class="mini-thumb"><%= p.icon %></span><% } %><span><%= p.name %></span></span></td><td data-label="Category"><%= p.category %></td><td data-label="Supplier"><%= p.supplier %></td><td data-label="Barcode"><strong><%= p.barcode || p.inventoryId || '—' %></strong></td><td data-label="Price"><%= formatNaira(p.price) %></td><td data-label="Colour"><%= p.colour || '—' %></td><td data-label="Quantity"><span class="stock-number <%= p.stock < 10 ? 'low' : '' %>"><%= p.stock %></span></td><% if (isAdmin) { %><td data-label="Actions" class="product-actions"><button class="action edit" type="button">Edit</button><button class="action stock-add" type="button">Add Item</button><button class="action delete" type="button">Remove Item</button></td><% } %></tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% if (pagination.totalPages > 1) { %>
+  <div class="pagination">
+    <span>Showing <%= pagination.startItem %> - <%= pagination.endItem %> of <%= pagination.totalItems %> products</span>
+    <div>
+      <% if (pagination.currentPage > 1) { %><a class="pagination-button" href="/products?page=<%= pagination.currentPage - 1 %>">&lsaquo;</a><% } %>
+      <% for (let pageNumber = 1; pageNumber <= pagination.totalPages; pageNumber++) { %>
+        <a class="pagination-button <%= pageNumber === pagination.currentPage ? 'active' : '' %>" href="/products?page=<%= pageNumber %>"><%= pageNumber %></a>
+      <% } %>
+      <% if (pagination.currentPage < pagination.totalPages) { %><a class="pagination-button" href="/products?page=<%= pagination.currentPage + 1 %>">&rsaquo;</a><% } %>
+    </div>
+  </div>
+  <% } %>
+</section>
+<% if (isAdmin) { %>
+<section class="card form-card" id="bulk-upload">
+  <h2>Bulk Product Upload</h2>
+  <p style="margin:-4px 0 16px;color:#718099;font-size:13px;">Upload an Excel .xlsx file with embedded product pictures. Required columns: Inventory ID, Product Name, Category, Supplier, Price, Colour, Quantity.</p>
+  <form method="post" action="/products/bulk-upload" enctype="multipart/form-data" class="product-form">
+    <label for="bulk-excel-file">Excel file (.xlsx)<input id="bulk-excel-file" name="excelFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required></label>
+    <div style="display:flex;align-items:flex-end;gap:10px;">
+      <a class="btn-primary" href="/products/bulk-template" download>Download Template</a>
+    </div>
+    <button class="btn-primary product-submit" type="submit">Upload Products</button>
+  </form>
+</section>
+<section class="card form-card" id="add">
+  <% if (bulkImported > 0) { %>
+    <div class="user-success">Successfully imported <%= bulkImported %> product(s)<%= bulkSkipped > 0 ? `; ${bulkSkipped} blank row(s) ignored.` : '.' %></div>
+  <% } %>
+  <h2>Add Product</h2>
+  <form method="post" action="/products/create" enctype="multipart/form-data" class="product-form" id="addProductForm">
+    <label for="product-inventory-id">Inventory ID<input id="product-inventory-id" name="inventoryId" maxlength="64" required placeholder="e.g. INV-1006"></label>
+    <label for="product-barcode">Barcode<input id="product-barcode" name="barcode" maxlength="64" placeholder="Scan or enter barcode"></label>
+    <label for="product-name">Product name<input id="product-name" name="name" required></label>
+    <label for="product-category">Category<input id="product-category" name="category" required></label>
+    <label for="product-supplier">Supplier<input id="product-supplier" name="supplier" required></label>
+    <label for="product-price">Price<input id="product-price" name="price" type="number" min="0" required></label>
+    <label for="product-colour">Colour<input id="product-colour" name="colour" required></label>
+    <label for="product-quantity">Quantity<input id="product-quantity" name="quantity" type="number" min="0" required></label>
+    <label for="product-image">Product image<input id="product-image" name="image" type="file" accept="image/*"></label>
+    <button class="btn-primary product-submit" type="submit">Save Product</button>
+  </form>
+</section>
+<%- include("partials/product-modal") %>
+<% } %>
+      </section>
+    </main>
+  </div>
+  <%- include("partials/footer") %>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> — stock-pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+   <link rel="icon" href="/jjj.png" type="image/png">
+  <link rel="apple-touch-icon" href="/jjj.png">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app">
+    <%- include("partials/sidebar") %>
+    <main class="main">
+      <%- include("partials/header") %>
+      <section class="content">
+<div class="page-heading">
+  <div>
+    <h1>Transactions</h1>
+    <p>Review completed, pending and refunded transactions for your store.</p>
+  </div>
+  <div style="display:flex;gap:8px">
+    <% if (isAdmin) { %>
+      <form method="post" action="/orders/clear" onsubmit="return confirm('Clear all saved transactions? This cannot be undone.')">
+     <!-- <button class="action delete" type="submit">Clear</button> --> 
+      </form>
+    <% } %>
+    <a class="btn-primary" href="/orders/download" download>Download Transactions</a>
+  </div>
+</div>
+<section class="card">
+  <div class="filters large">
+    <input id="orderSearch" type="search" placeholder="⌕  Search transactions...">
+    <select id="orderStatusFilter" aria-label="Filter by status">
+      <option value="">All Statuses</option>
+      <option value="Completed">Completed</option>
+      <option value="Pending">Pending</option>
+      <option value="Refunded">Refunded</option>
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table id="ordersTable">
+      <thead>
+        <tr>
+          <th>Transaction ID</th>
+          <th>Amount</th>
+          <th>Payment Method</th>
+          <th>Status</th>
+          <% if (isAdmin) { %><th>Staff</th><% } %>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Reference</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% orders.forEach(o => { %>
+          <tr data-order-status="<%= String(o.status || "").toLowerCase() %>">
+            <td><strong><%= o.id %></strong></td>
+            <td><%= formatNaira(o.amount) %></td>
+            <td><%= o.paymentMethod %></td>
+            <td><span class="status <%= o.status.toLowerCase() %>"><%= o.status %></span></td>
+            <% if (isAdmin) { %><td><%= o.staffName %></td><% } %>
+            <td><%= o.date %></td>
+            <td><%= o.time || '—' %></td>
+            <td><%= o.reference %></td>
+            <td><a class="action edit" href="/orders/download">Download</a></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% if (pagination.totalPages > 1) { %>
+  <div class="pagination">
+    <span>Showing <%= pagination.startItem %> - <%= pagination.endItem %> of <%= pagination.totalItems %> transactions</span>
+    <div>
+      <% if (pagination.currentPage > 1) { %><a class="pagination-button" href="/orders?page=<%= pagination.currentPage - 1 %>">&lsaquo;</a><% } %>
+      <% for (let pageNumber = 1; pageNumber <= pagination.totalPages; pageNumber++) { %>
+        <a class="pagination-button <%= pageNumber === pagination.currentPage ? 'active' : '' %>" href="/orders?page=<%= pageNumber %>"><%= pageNumber %></a>
+      <% } %>
+      <% if (pagination.currentPage < pagination.totalPages) { %><a class="pagination-button" href="/orders?page=<%= pagination.currentPage + 1 %>">&rsaquo;</a><% } %>
+    </div>
+  </div>
+  <% } %>
+</section>
+      </section>
+    </main>
+  </div>
+  <%- include("partials/footer") %>
+</body>
+</html>

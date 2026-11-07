@@ -1,0 +1,13 @@
+<header class="topbar">
+  <button class="mobile-menu" id="mobileMenu" aria-label="Open menu">☰</button>
+  <div class="breadcrumb">
+    <span>stock-pro</span>
+    <span>/</span>
+    <strong><%= title %></strong>
+  </div>
+  <div class="admin-menu">
+    <div class="avatar"><%= typeof currentUser !== 'undefined' && currentUser && currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'A' %></div>
+    <span><%= typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Administrator' ? 'Admin' : 'Sales' %></span>
+    <span class="chevron">⌄</span>
+  </div>
+</header>

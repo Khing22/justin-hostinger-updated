@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> — stock-pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app">
+    <%- include("partials/sidebar") %>
+    <main class="main">
+      <%- include("partials/header") %>
+      <section class="content">
+<div class="page-heading"><div><h1>Profile</h1><p>Manage your Stock account information.</p></div></div>
+      <% if (profileUpdated) { %><div class="user-success">Profile and security details updated successfully.</div><% } %>
+      <% if (profileError) { %><div class="login-error user-message">Enter a valid name and email, or a password of at least 12 characters. The email must also be unique.</div><% } %>
+      <section class="card profile-card">
+        <div class="profile-avatar"><%= admin.name.charAt(0).toUpperCase() %></div>
+        <h2><%= admin.name %></h2>
+        <p><%= admin.email %></p>
+        <span class="role"><%= admin.role %></span>
+        <hr>
+        <form method="post" action="/profile/update">
+          <div class="profile-fields">
+            <label>Full name<input name="name" value="<%= admin.name %>" required></label>
+            <label>Email<input name="email" type="email" value="<%= admin.email %>" required></label>
+            <label>New password (optional)<input name="password" type="password" minlength="12" placeholder="Leave blank to keep current password"></label>
+          </div>
+          <button class="btn-primary" type="submit">Save Changes</button>
+        </form>
+      </section>
+      </section>
+    </main>
+  </div>
+  <%- include("partials/footer") %>
+</body>
+</html>

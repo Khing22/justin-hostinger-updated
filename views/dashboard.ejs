@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> — stock-pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/jjj.png" type="image/png">
+  <link rel="apple-touch-icon" href="/jjj.png">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/products.css">
+</head>
+<body>
+  <div class="app">
+    <%- include("partials/sidebar") %>
+    <main class="main">
+      <%- include("partials/header") %>
+      <section class="content">
+<div class="page-heading">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Overview of your inventory, sales and activities.</p>
+  </div>
+  <button class="date-button" id="current-date-time">▣ &nbsp; <%= currentDateTime || 'loading...' %> &nbsp;</button>
+</div>
+
+<div class="stats-grid">
+  <%- include("partials/stat", { icon: "▣", label: "Items Listed", value: stats.totalProducts, change: "", tone: "blue", showComparison: false }) %>
+  <%- include("partials/stat", { icon: "◉", label: "Available Quantity", value: stats.totalStocks.toLocaleString(), change: "", tone: "green", showComparison: false }) %>
+  <%- include("partials/stat", { icon: "🛒", label: "Transactions", value: stats.totalOrders, change: "", tone: "purple", showComparison: false }) %>
+  <%- include("partials/stat", { icon: "₦", label: "Total Amount", value: formatNaira(stats.revenue), change: "", tone: "orange", showComparison: false }) %>
+</div>
+
+<div class="dashboard-grid top-grid">
+  <section class="card">
+    <div class="card-head">
+      <h2><span class="head-icon danger">!</span> Low-Quantity Products</h2>
+      <a href="/products">View All</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Product Name</th><th>Category</th><th>Quantity</th></tr></thead>
+        <tbody>
+          <% lowStock.forEach(item => { %>
+            <tr><td><%= item.name %></td><td><%= item.category %></td><td><span class="stock-badge <%= item.stock <= 8 ? 'critical' : '' %>"><%= item.stock %></span></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <section class="card">
+    <div class="card-head"><h2><span class="head-icon star">★</span> Top Quantity Products</h2><a href="/products">View All</a></div>
+    <div class="stock-list">
+      <% topStocked.forEach(item => { %>
+        <div class="stock-row">
+          <div class="product-thumb"><% if (item.image) { %><img class="mini-thumb product-image" src="<%= item.image %>" alt=""><% } else { %><%= item.icon %><% } %></div>
+          <div class="stock-name"><strong><%= item.name %></strong><span><%= item.category %></span></div>
+          <strong><%= item.stock %></strong>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+</div>
+
+<div class="dashboard-grid bottom-grid">
+  <section class="card products-panel">
+    <div class="card-head">
+      <h2><span class="head-icon">▣</span> Sellable Products</h2>
+      <a href="/products">View All</a>
+    </div>
+    <div class="summary-row" style="display:flex;gap:12px;flex-wrap:wrap;margin:10px 0 16px;">
+      <div class="mini-stat" style="flex:1;min-width:140px;padding:10px 12px;border-radius:10px;background:#f3f7ff;border:1px solid #dce9ff;">
+        <small style="display:block;color:#6c7b96;margin-bottom:4px;">Items listed</small>
+        <strong style="font-size:20px;color:#183257;"><%= stats.totalProducts %></strong>
+      </div>
+      <div class="mini-stat" style="flex:1;min-width:180px;padding:10px 12px;border-radius:10px;background:#edfdf5;border:1px solid #cdeedb;">
+        <small style="display:block;color:#6c7b96;margin-bottom:4px;">Total amount</small>
+        <strong style="font-size:20px;color:#183257;"><%= formatNaira(stats.revenue) %></strong>
+      </div>
+    </div>
+    <div class="filters">
+      <input id="productSearch" type="search" placeholder="⌕  Search products...">
+          <% const dashboardCategories = [...new Set(products.map(p => p.category).filter(Boolean))].sort(); %>
+          <% const dashboardSuppliers = [...new Set(products.map(p => p.supplier).filter(Boolean))].sort(); %>
+          <select id="productCategoryFilter" aria-label="Filter by category">
+            <option value="">All Categories</option>
+            <% dashboardCategories.forEach(category => { %><option value="<%= category %>"><%= category %></option><% }) %>
+          </select>
+          <select id="productSupplierFilter" aria-label="Filter by supplier">
+            <option value="">All Suppliers</option>
+            <% dashboardSuppliers.forEach(supplier => { %><option value="<%= supplier %>"><%= supplier %></option><% }) %>
+          </select>
+      <a class="btn-primary" href="/products#add">Add Item to Sell</a>
+    </div>
+    <div class="table-wrap">
+      <table id="productsTable">
+        <thead><tr><th>Inventory ID</th><th>Product Name</th><th>Category</th><th>Supplier</th><th>Price</th><th>Colour</th><th>Quantity</th><th>Actions</th></tr></thead>
+        <tbody>
+          <% products.forEach(p => { %>
+            <tr data-product-id="<%= p.id %>" data-inventory-id="<%= p.inventoryId || '' %>" data-product-name="<%= p.name %>" data-product-category="<%= p.category %>" data-product-supplier="<%= p.supplier %>" data-product-price="<%= p.price %>" data-product-colour="<%= p.colour || '' %>" data-product-stock="<%= p.stock %>">
+              <td data-label="Inventory ID"><strong><%= p.inventoryId || '—' %></strong></td>
+              <td data-label="Product"><span class="table-product"><% if (p.image) { %><img class="mini-thumb product-image" src="<%= p.image %>" alt=""><% } else { %><span class="mini-thumb"><%= p.icon %></span><% } %><span><%= p.name %></span></span></td>
+              <td data-label="Category"><%= p.category %></td><td data-label="Supplier"><%= p.supplier %></td><td data-label="Price"><%= formatNaira(p.price) %></td>
+              <td data-label="Colour"><%= p.colour || '—' %></td>
+              <td data-label="Quantity"><span class="stock-number <%= p.stock < 10 ? 'low' : '' %>"><%= p.stock %></span></td>
+              <td data-label="Actions" class="product-actions"><button class="action stock-add" type="button">Add Item</button><button class="action delete" type="button">Remove Item</button></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% if (productPagination.totalPages > 1) { %>
+    <div class="pagination">
+      <span>Showing <%= productPagination.startItem %> - <%= productPagination.endItem %> of <%= productPagination.totalItems %> products</span>
+      <div>
+        <% if (productPagination.currentPage > 1) { %><a class="pagination-button" href="/?productPage=<%= productPagination.currentPage - 1 %>&orderPage=<%= orderPagination.currentPage %>">&lsaquo;</a><% } %>
+        <% for (let pageNumber = 1; pageNumber <= productPagination.totalPages; pageNumber++) { %>
+          <a class="pagination-button <%= pageNumber === productPagination.currentPage ? 'active' : '' %>" href="/?productPage=<%= pageNumber %>&orderPage=<%= orderPagination.currentPage %>"><%= pageNumber %></a>
+        <% } %>
+        <% if (productPagination.currentPage < productPagination.totalPages) { %><a class="pagination-button" href="/?productPage=<%= productPagination.currentPage + 1 %>&orderPage=<%= orderPagination.currentPage %>">&rsaquo;</a><% } %>
+      </div>
+    </div>
+    <% } %>
+  </section>
+
+  <section class="card orders-panel">
+    <div class="card-head"><h2><span class="head-icon">🛒</span> Orders</h2><a href="/orders">View All</a></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Order ID</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>
+          <% orders.forEach(order => { %>
+            <tr><td><strong><%= order.id %></strong></td><td><%= order.customer %></td><td><%= formatNaira(order.amount) %></td><td><span class="status <%= order.status.toLowerCase() %>"><%= order.status %></span></td><td><%= order.date %></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% if (orderPagination.totalPages > 1) { %>
+    <div class="pagination">
+      <span>Showing <%= orderPagination.startItem %> - <%= orderPagination.endItem %> of <%= orderPagination.totalItems %> orders</span>
+      <div>
+        <% if (orderPagination.currentPage > 1) { %><a class="pagination-button" href="/?productPage=<%= productPagination.currentPage %>&orderPage=<%= orderPagination.currentPage - 1 %>">&lsaquo;</a><% } %>
+        <% for (let pageNumber = 1; pageNumber <= orderPagination.totalPages; pageNumber++) { %>
+          <a class="pagination-button <%= pageNumber === orderPagination.currentPage ? 'active' : '' %>" href="/?productPage=<%= productPagination.currentPage %>&orderPage=<%= pageNumber %>"><%= pageNumber %></a>
+        <% } %>
+        <% if (orderPagination.currentPage < orderPagination.totalPages) { %><a class="pagination-button" href="/?productPage=<%= productPagination.currentPage %>&orderPage=<%= orderPagination.currentPage + 1 %>">&rsaquo;</a><% } %>
+      </div>
+    </div>
+    <% } %>
+  </section>
+</div>
+<%- include("partials/product-modal") %>
+      </section>
+    </main>
+  </div>
+  <%- include("partials/footer") %>
+  <script>
+    const dateTimeButton = document.getElementById('current-date-time');
+    if (dateTimeButton) {
+      const updateDateTime = () => {
+        const now = new Date();
+        dateTimeButton.textContent = `▣  ${now.toLocaleString('en-NG', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}`;
+      };
+      updateDateTime();
+      setInterval(updateDateTime, 60000);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  <title><%= title %> - jtech-stok</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/jjj.png" type="image/png">
+  <link rel="apple-touch-icon" href="/jjj.png">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/login.css">
+
+
+</head>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-intro">
+      <div class="login-brand">
+        <div class="brand-mark">
+          <img src="/jjj.png" alt="StockPro logo">
+        </div>
+        <div>
+          <strong>Adisl</strong>
+          <span>Inventory &amp; Sales</span>
+        </div>
+      </div>
+      <div class="intro-copy">
+        <p class="eyebrow">Inventory, simplified</p>
+        <h1>Keep every shelf, sale, and supplier in view.</h1>
+        <p>Sign in to manage your stock and make your next move with confidence.</p>
+      </div>
+      <div class="intro-footer"><span class="intro-line"></span><span>Built for focused teams</span></div>
+    </section>
+
+    <section class="login-panel" aria-labelledby="login-title">
+      <div class="login-card">
+        <div class="mobile-login-brand login-brand">
+          <div class="brand-mark">
+            <img src="/jjj.png" alt="StockPro logo">
+          </div>
+          <strong>Adisl</strong>
+        </div>
+        <p class="eyebrow">Welcome back</p>
+        <h2 id="login-title">Sign in to your account</h2>
+        <p class="login-subtitle">Enter your details to access your dashboard.</p>
+
+        <% if (error) { %>
+          <div class="login-error" role="alert"><%= error %></div>
+        <% } %>
+
+        <form class="login-form" action="/login" method="post">
+          <input type="hidden" name="redirect" value="<%= redirect %>">
+          <label for="email">Email address</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required autofocus>
+          <div class="password-label"><label for="password">Password</label><a href="/login"></a></div>
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+          <label class="remember-me"><input type="checkbox" name="remember"> <span>Keep me signed in</span></label>
+          <button class="login-submit" type="submit">Sign in <span aria-hidden="true">&rarr;</span></button>
+        </form>
+       
+      </div>
+      <p class="login-copyright">&copy; 2026 Adisl. All rights reserved.</p>
+    </section>
+  </main>
+</body>
+</html>

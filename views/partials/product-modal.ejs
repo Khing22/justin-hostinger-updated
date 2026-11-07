@@ -1,0 +1,23 @@
+<div class="product-modal" id="productModal" hidden>
+  <div class="product-modal-backdrop" data-close-product-modal></div>
+  <section class="product-modal-card" role="dialog" aria-modal="true" aria-labelledby="editProductTitle">
+    <div class="product-modal-head">
+      <div><p class="eyebrow">Product details</p><h2 id="editProductTitle">Edit product</h2></div>
+      <button class="modal-close" type="button" data-close-product-modal aria-label="Close">&times;</button>
+    </div>
+    <form method="post" enctype="multipart/form-data" class="edit-product-form" id="editProductForm">
+      <div class="edit-product-grid">
+        <label for="edit-product-inventory-id">Inventory ID<input id="edit-product-inventory-id" name="inventoryId" maxlength="64" required></label>
+        <label for="edit-product-barcode">Barcode<input id="edit-product-barcode" name="barcode" maxlength="64"></label>
+        <label for="edit-product-name">Product name<input id="edit-product-name" name="name" required></label>
+        <label for="edit-product-category">Category<input id="edit-product-category" name="category" required></label>
+        <label for="edit-product-supplier">Supplier<input id="edit-product-supplier" name="supplier" required></label>
+        <label for="edit-product-price">Price<input id="edit-product-price" name="price" type="number" min="0" required></label>
+        <label for="edit-product-colour">Colour<input id="edit-product-colour" name="colour" required></label>
+        <label for="edit-product-quantity">Quantity<input id="edit-product-quantity" name="quantity" type="number" min="0" required></label>
+        <label for="edit-product-image">Replace image<input id="edit-product-image" name="image" type="file" accept="image/*"></label>
+      </div>
+      <div class="product-modal-actions"><button class="modal-cancel" type="button" data-close-product-modal>Cancel</button><button class="btn-primary" type="submit">Save changes</button></div>
+    </form>
+  </section>
+</div>

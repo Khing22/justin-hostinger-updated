@@ -1,0 +1,28 @@
+{
+  "name": "stockpro-ejs-dashboard",
+  "version": "1.0.0",
+  "description": "StockPro inventory dashboard built with Node.js, Express and EJS",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "change-admin": "node change-admin.js"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.7",
+    "ejs": "^7.0.2",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "multer": "^2.3.0",
+    "mysql2": "^3.4.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "overrides": {
+    "minimatch": "^11.0.4"
+  }
+}

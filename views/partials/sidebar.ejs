@@ -1,0 +1,25 @@
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">
+      <img src="/jjj.png" alt="StockPro logo">
+    </div>
+    <div>
+      <strong>stock-pro</strong>
+      <span>Inventory & Sales</span>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <% navItems.forEach(item => { %>
+      <a class="nav-item <%= currentPath === item.href ? 'active' : '' %>" href="<%= item.href %>">
+        <span class="nav-icon"><%- include("icons/" + item.icon) %></span>
+        <span><%= item.label %></span>
+      </a>
+    <% }) %>
+  </nav>
+
+  <a class="nav-item logout" href="/logout">
+    <span class="nav-icon"><%- include("icons/logout") %></span>
+    <span>Logout</span>
+  </a>
+</aside>

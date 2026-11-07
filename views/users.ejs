@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> — stock-pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/products.css">
+</head>
+<body>
+  <div class="app">
+    <%- include("partials/sidebar") %>
+    <main class="main">
+      <%- include("partials/header") %>
+      <section class="content">
+        <div class="page-heading"><div><h1>Users</h1><p>Create and manage the people who can access stock-pro.</p></div></div>
+        <% if (typeof queryError !== "undefined" && queryError) { %><div class="login-error user-message">That email is already in use or required fields are missing.</div><% } %>
+        <% if (typeof created !== "undefined" && created) { %><div class="user-success">User created successfully. They can now sign in with their email and password.</div><% } %>
+        <% if (typeof userUpdated !== "undefined" && userUpdated) { %><div class="user-success">Password reset successfully.</div><% } %>
+        <% if (typeof userRemoved !== "undefined" && userRemoved) { %><div class="user-success">Staff account removed successfully.</div><% } %>
+        <section class="card form-card user-form-card">
+          <h2>Add New User</h2>
+          <form method="post" action="/users/create" class="product-form user-form">
+            <label for="user-name">Full name<input id="user-name" name="name" required></label>
+            <label for="user-email">Email address<input id="user-email" name="email" type="email" required></label>
+            <label for="user-password">Temporary password<input id="user-password" name="password" type="password" minlength="12" required></label>
+            <label for="user-role">Role<select id="user-role" name="role"><option>Staff</option><option>Manager</option><option>Administrator</option></select></label>
+            <button class="btn-primary product-submit" type="submit">Create User</button>
+          </form>
+        </section>
+        <section class="card user-list-card">
+          <div class="card-head"><h2><span class="head-icon">♙</span> Current Users</h2><span class="user-count"><%= users.length %> users</span></div>
+          <div class="table-wrap">
+            <table class="user-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead><tbody>
+              <% users.forEach(user => { %><tr><td><strong><%= user.name %></strong></td><td><%= user.email %></td><td><span class="role"><%= user.role %></span></td><td>
+                <% if (user.role !== 'Administrator' && user.id !== currentUser.id) { %>
+                  <form method="post" action="/users/<%= user.id %>/update" class="user-action-form">
+                    <input name="name" value="<%= user.name %>" aria-label="Full name" required>
+                    <input name="email" type="email" value="<%= user.email %>" aria-label="Email address" required>
+                    <input name="password" type="password" minlength="12" placeholder="New password (optional)">
+                    <button class="action edit" type="submit">Save account</button>
+                  </form>
+                  <form method="post" action="/users/<%= user.id %>/delete" class="user-action-form" onsubmit="return confirm('Remove this staff account?');">
+                    <button class="action delete" type="submit">Remove</button>
+                  </form>
+                <% } else { %><span>Protected</span><% } %>
+              </td></tr><% }) %>
+            </tbody></table>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <%- include("partials/footer") %>
+</body>
+</html>

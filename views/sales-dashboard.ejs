@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> — stock-pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/products.css">
+</head>
+<body>
+  <div class="app">
+    <%- include("partials/sidebar") %>
+    <main class="main">
+      <%- include("partials/header") %>
+      <section class="content">
+        <div class="page-heading">
+          <div>
+            <h1><%= title === 'Products' ? 'Products' : 'Sales Dashboard' %></h1>
+            <p><%= title === 'Products' ? 'Browse available products, check live stock, and sell from the POS cart.' : 'Track live sales, items sold, and customer transaction activity.' %></p>
+          </div>
+          <button class="date-button" id="current-date-time">▣ &nbsp; loading... &nbsp;</button>
+        </div>
+
+        <% if (saleMessage) { %>
+          <div class="sale-alert <%= saleTone %>" style="margin-bottom:18px;padding:12px 14px;border-radius:10px;border:1px solid <%= saleTone === 'success' ? '#b5e7c8' : '#f5b9b9' %>;background:<%= saleTone === 'success' ? '#edfdf3' : '#fff1f1' %>;color:<%= saleTone === 'success' ? '#1c6d3b' : '#9a2d2d' %>;font-weight:600;">
+            <%= saleMessage %>
+          </div>
+        <% } %>
+
+        <% if (title !== 'Products') { %>
+          <div class="stats-grid">
+            <%- include("partials/stat", { icon: "₦", label: "Today Sales", value: formatNaira(salesStats.todaySales), change: "", tone: "green", showComparison: false }) %>
+            <%- include("partials/stat", { icon: "🛒", label: "Items Sold", value: salesStats.itemsSold, change: "", tone: "purple", showComparison: false }) %>
+            <%- include("partials/stat", { icon: "💵", label: "Cash Sales", value: formatNaira(salesStats.cashSales), change: "", tone: "orange", showComparison: false }) %>
+      
+          </div>
+
+          <div class="dashboard-grid top-grid">
+            <section class="card">
+              <div class="card-head">
+                <h2><span class="head-icon">📈</span> Top Selling Products</h2>
+              </div>
+              <div class="stock-list">
+                <% if (topSellingProducts.length) { %>
+                  <% topSellingProducts.forEach(item => { %>
+                  <div class="stock-row">
+                    <div class="product-thumb"><% if (item.image) { %><img class="mini-thumb product-image" src="<%= item.image %>" alt=""><% } else { %><%= item.icon %><% } %></div>
+                    <div class="stock-name">
+                      <strong><%= item.name %></strong>
+                      <span><%= item.quantity %> sold</span>
+                    </div>
+                    <strong><%= formatNaira(item.revenue) %></strong>
+                  </div>
+                  <% }) %>
+                <% } else { %>
+                  <div style="padding:12px 0;color:#6d7f98;">No top-selling products to display.</div>
+                <% } %>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head">
+                <h2><span class="head-icon danger">!</span> Refund & Returns</h2>
+              </div>
+
+              <form method="post" action="/returns/record" style="display:grid;gap:10px;padding:0 0 18px;">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
+                  <select name="saleId" required style="padding:10px 12px;border:1px solid #dfe8f5;border-radius:10px;background:#fff;">
+                    <option value="">Select original sale</option>
+                    <% (Array.isArray(visibleSales) ? visibleSales : []).forEach(function(sale) { %>
+                      <option value="<%= sale.id %>"><%= sale.id %> - <%= sale.reference || sale.customer || "Sale" %></option>
+                    <% }) %>
+                  </select>
+                  <input type="text" name="itemName" placeholder="Item returned" required style="padding:10px 12px;border:1px solid #dfe8f5;border-radius:10px;background:#fff;" />
+                  <input type="number" name="quantity" min="1" value="1" placeholder="Qty" required style="padding:10px 12px;border:1px solid #dfe8f5;border-radius:10px;background:#fff;" />
+                </div>
+                <textarea name="reason" rows="3" placeholder="Reason for return" style="padding:10px 12px;border:1px solid #dfe8f5;border-radius:10px;resize:vertical;background:#fff;"></textarea>
+                <button class="btn-primary" type="submit" style="width:max-content;">Record Return</button>
+              </form>
+
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                  <tbody>
+                    <tr><td>Returned items</td><td><%= salesStats.returnedItems || 0 %></td></tr>
+                    <tr><td>Refund total</td><td><%= formatNaira(salesStats.refundTotal) %></td></tr>
+                    <tr><td>Net sales</td><td><%= formatNaira(salesStats.totalRevenue - salesStats.refundTotal) %></td></tr>
+                    <tr><td>Avg order</td><td><%= formatNaira(Math.round(salesStats.totalRevenue / Math.max(orders.length, 1))) %></td></tr>
+                  </tbody>
+                </table>
+                <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                  <strong>Return log</strong>
+                  <a class="btn-primary" href="/returns/download" download>Download Word</a>
+                </div>
+                <% if (Array.isArray(returns) && returns.length) { %>
+                  <div style="margin-top:12px;display:grid;gap:8px;">
+                    <% returns.slice(0, 5).forEach(record => { %>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid #dfe8f5;border-radius:10px;background:#fff;">
+                        <div>
+                          <strong><%= record.itemName %></strong>
+                          <div style="font-size:12px;color:#607291;"><%= record.quantity %> item(s) · <%= record.reason %></div>
+                        </div>
+                        <span style="white-space:nowrap;color:#b23838;font-weight:700;"><%= formatNaira(record.amount || 0) %></span>
+                      </div>
+                    <% }) %>
+                  </div>
+                <% } else { %>
+                  <div style="margin-top:12px;color:#6d7f98;">No returned items recorded yet.</div>
+                <% } %>
+              </div>
+            </section>
+          </div>
+        <% } %>
+
+        <section class="card products-panel" style="padding:0;overflow:hidden;">
+          <div class="card-head" style="padding:18px 20px 12px;">
+            <h2><span class="head-icon">🧾</span> Products</h2>
+          </div>
+
+          <div class="sales-layout">
+            <div>
+              <div style="margin-bottom:14px;">
+                <input id="salesProductSearch" type="search" placeholder="Search products..." style="width:100%;padding:11px 14px;border:1px solid #dfe8f5;border-radius:10px;background:#fff;">
+              </div>
+              <div id="salesProductGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;">
+              <% products.forEach(product => { %>
+                <article class="sale-product" data-product-id="<%= product.id %>" data-product-name="<%= product.name %>" data-product-price="<%= product.price %>" data-product-stock="<%= product.stock %>" style="border:1px solid #dfe8f5;border-radius:14px;padding:14px;background:#fff;display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-height:170px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div class="product-thumb" style="width:42px;height:42px;border-radius:11px;background:#edf4ff;display:grid;place-items:center;overflow:hidden;"><% if (product.image) { %><img class="product-image" src="<%= product.image %>" alt="<%= product.name %>" style="width:100%;height:100%;object-fit:cover;"><% } else { %><%= product.icon || '📦' %><% } %></div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                      <span style="font-size:12px;color:#5c6d86;background:#f2f6ff;border-radius:999px;padding:5px 8px;">Quantity: <%= product.stock %></span>
+                      <% if (product.lastStockChange && product.lastStockChange !== 0) { %>
+                        <span style="font-size:11px;padding:3px 7px;border-radius:999px;<%= product.lastStockChange > 0 ? 'background:#eafaf1;color:#1f8f4d;' : 'background:#fff1f1;color:#b63c3c;' %>"><%= product.lastStockChange > 0 ? '+' : '' %><%= product.lastStockChange %></span>
+                      <% } %>
+                    </div>
+                  </div>
+                  <div>
+                    <strong style="display:block;font-size:16px;"><%= product.name %></strong>
+                    <div style="margin-top:5px;font-size:11px;color:#718099;">Inventory ID: <strong><%= product.inventoryId || '—' %></strong></div>
+                    <div style="margin-top:3px;font-size:11px;color:#718099;">Colour: <strong><%= product.colour || '—' %></strong></div>
+                    <div style="margin-top:6px;color:#4d5f7c;font-weight:600;"><%= formatNaira(product.price) %></div>
+                  </div>
+                  <button class="btn-primary add-to-cart" type="button" style="width:100%;">Add</button>
+                </article>
+              <% }) %>
+              </div>
+            </div>
+
+            <aside class="cart-panel">
+              <div>
+                <h3 style="margin:0 0 12px;font-size:22px;">Cart</h3>
+                <div class="cart-list" style="display:flex;flex-direction:column;gap:8px;min-height:120px;">
+                  <div class="empty-cart" style="color:#6a7d99;">No items added yet.</div>
+                </div>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;font-weight:700;">
+                  <span>Total:</span>
+                  <span class="cart-total">₦0</span>
+                </div>
+
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                  <span style="font-size:12px;color:#586d8c;">Currency:</span>
+                  <button type="button" class="currency" data-currency="USD" style="padding:6px 10px;border:1px solid #dfe8f5;border-radius:8px;background:#fff;cursor:pointer;">USD ($)</button>
+                  <button type="button" class="currency" data-currency="EUR" style="padding:6px 10px;border:1px solid #dfe8f5;border-radius:8px;background:#fff;cursor:pointer;">EUR (€)</button>
+                  <button type="button" class="currency active" data-currency="NGN" style="padding:6px 10px;border:1px solid #dfe8f5;border-radius:8px;background:#fff;cursor:pointer;">NGN (₦)</button>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <span style="font-size:12px;color:#586d8c;">Payment:</span>
+                  <select class="payment-select" style="padding:8px 10px;border:1px solid #dfe8f5;border-radius:8px; background:#fff;">
+                    <option>Cash</option>
+                    <option>Card</option>
+                    <option>Tendered</option>
+                  </select>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <span style="font-size:12px;color:#586d8c;">Tendered:</span>
+                  <input class="tendered-input" type="number" min="0" step="0.01" placeholder="0.00" style="flex:1;min-width:120px;padding:8px 10px;border:1px solid #dfe8f5;border-radius:8px;" />
+                </div>
+
+                <button class="btn-primary checkout-btn" type="button" style="margin-top:4px;">Checkout</button>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <% if (title !== 'Products') { %>
+          <section class="card products-panel">
+            <div class="card-head">
+              <h2><span class="head-icon">🧾</span> Recent Sales</h2>
+              <a href="/orders">View Transactions</a>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Amount</th>
+                    <th>Payment</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% recentSales.forEach(sale => { %>
+                    <tr>
+                      <td><%= sale.item %></td>
+                      <td><%= formatNaira(sale.amount) %></td>
+                      <td><%= sale.payment %></td>
+                      <td><%= sale.time %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        <% } %>
+      </section>
+    </main>
+  </div>
+  <%- include("partials/footer") %>
+  <script>
+    const cart = [];
+    let activeCurrency = 'NGN';
+    const rates = { USD: 1, EUR: 0.92, NGN: 1 };
+
+    function formatMoney(value, currency = activeCurrency) {
+      const v = Number(value) || 0;
+      const formatters = {
+        USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }),
+        EUR: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR' }),
+        NGN: new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 })
+      };
+      return formatters[currency].format(v);
+    }
+
+    function updateTotal() {
+      const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const convertedTotal = activeCurrency === 'NGN' ? total : total / rates[activeCurrency];
+      document.querySelector('.cart-total').textContent = formatMoney(convertedTotal, activeCurrency);
+    }
+
+    function renderCart() {
+      const cartList = document.querySelector('.cart-list');
+      if (!cart.length) {
+        cartList.innerHTML = '<div class="empty-cart" style="color:#6a7d99;">No items added yet.</div>';
+        updateTotal();
+        return;
+      }
+
+      cartList.replaceChildren();
+      cart.forEach(item => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border:1px solid #dfe8f5;border-radius:10px;background:#fff;';
+
+        const details = document.createElement('div');
+        const name = document.createElement('strong');
+        name.textContent = item.name;
+        const quantity = document.createElement('div');
+        quantity.style.fontSize = '12px';
+        quantity.style.color = '#627892';
+        quantity.textContent = `${item.quantity} x ${formatMoney(item.price, activeCurrency)}`;
+        details.append(name, quantity);
+
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'remove-item';
+        removeButton.dataset.id = String(item.id);
+        removeButton.style.cssText = 'border:none;background:#fff0f0;color:#b23838;border-radius:8px;padding:6px 8px;cursor:pointer;';
+        removeButton.textContent = 'Remove';
+
+        row.append(details, removeButton);
+        cartList.appendChild(row);
+      });
+
+      document.querySelectorAll('.remove-item').forEach(button => {
+        button.addEventListener('click', event => {
+          const id = Number(event.currentTarget.dataset.id);
+          const index = cart.findIndex(item => item.id === id);
+          if (index >= 0) cart.splice(index, 1);
+          renderCart();
+        });
+      });
+
+      updateTotal();
+    }
+
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+      button.addEventListener('click', event => {
+        const card = event.currentTarget.closest('.sale-product');
+        const productId = Number(card.dataset.productId);
+        const name = card.dataset.productName;
+        const price = Number(card.dataset.productPrice);
+        const stock = Number(card.dataset.productStock);
+
+        const existing = cart.find(item => item.id === productId);
+        if (existing) {
+          if (existing.quantity >= stock) return;
+          existing.quantity += 1;
+        } else {
+          cart.push({ id: productId, name, price, quantity: 1, stock });
+        }
+
+        renderCart();
+      });
+    });
+
+    document.querySelectorAll('.currency').forEach(button => {
+      button.addEventListener('click', () => {
+        activeCurrency = button.dataset.currency;
+        document.querySelectorAll('.currency').forEach(item => item.classList.toggle('active', item === button));
+        renderCart();
+      });
+    });
+
+    document.querySelector('.checkout-btn').addEventListener('click', async () => {
+      const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const tendered = Number(document.querySelector('.tendered-input').value || 0);
+      if (!cart.length) {
+        alert('No items in cart.');
+        return;
+      }
+
+      const paymentMethod = document.querySelector('.payment-select')?.value || 'Cash';
+      try {
+        const response = await fetch('/sales/record', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            paymentMethod,
+            items: JSON.stringify(cart.map(item => ({ productId: item.id, quantity: item.quantity })))
+          })
+        });
+
+        if (response.redirected || response.ok) {
+          const totalDisplay = activeCurrency === 'NGN' ? total : total / rates[activeCurrency];
+          const tenderedDisplay = activeCurrency === 'NGN' ? tendered : tendered / rates[activeCurrency];
+          alert(`Checkout complete. Total: ${formatMoney(totalDisplay, activeCurrency)} | Tendered: ${formatMoney(tenderedDisplay, activeCurrency)}`);
+          cart.length = 0;
+          renderCart();
+          document.querySelector('.tendered-input').value = '';
+          window.location.href = '/?sale=success';
+          return;
+        }
+
+        alert('Unable to complete sale. Please review the cart and stock levels.');
+      } catch (error) {
+        alert('Unable to complete sale. Please try again.');
+      }
+    });
+
+    const salesSearch = document.getElementById('salesProductSearch');
+    const salesGrid = document.getElementById('salesProductGrid');
+    if (salesSearch && salesGrid) {
+      salesSearch.addEventListener('input', (event) => {
+        const term = event.target.value.toLowerCase();
+        salesGrid.querySelectorAll('.sale-product').forEach(product => {
+          const text = product.textContent.toLowerCase();
+          product.style.display = text.includes(term) ? '' : 'none';
+        });
+      });
+    }
+
+    const dateTimeButton = document.getElementById('current-date-time');
+    if (dateTimeButton) {
+      const updateDateTime = () => {
+        const now = new Date();
+        dateTimeButton.textContent = `▣  ${now.toLocaleString('en-NG', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}`;
+      };
+      updateDateTime();
+      setInterval(updateDateTime, 60000);
+    }
+
+    renderCart();
+  </script>
+</body>
+</html>

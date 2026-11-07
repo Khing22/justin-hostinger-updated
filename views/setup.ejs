@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="icon" href="/jjj.png" type="image/png">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/login.css">
+</head>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-intro">
+      <div class="login-brand">
+        <div class="brand-mark">
+          <img src="/jjj.png" alt="StockPro logo">
+        </div>
+        <div>
+          <strong>Adisl</strong>
+          <span>Inventory &amp; Sales</span>
+        </div>
+      </div>
+      <div class="intro-copy">
+        <p class="eyebrow">Secure setup</p>
+        <h1>Create your administrator account.</h1>
+        <p>Configure the first secure account before opening the dashboard.</p>
+      </div>
+      <div class="intro-footer"><span class="intro-line"></span><span>Protected first-run setup</span></div>
+    </section>
+
+    <section class="login-panel">
+      <div class="login-card">
+        <div class="mobile-login-brand login-brand">
+          <div class="brand-mark">
+            <img src="/jjj.png" alt="StockPro logo">
+          </div>
+          <strong>Adisl</strong>
+        </div>
+        <p class="eyebrow">Account setup</p>
+        <h2>First administrator setup</h2>
+        <p class="login-subtitle">Create the administrator account for this installation.</p>
+        <% if (error) { %>
+          <div class="login-error" role="alert"><%= error %></div>
+        <% } %>
+        <form class="login-form" action="/setup" method="post">
+          <label for="name">Name</label>
+          <input id="name" name="name" type="text" value="Administrator" required>
+          <label for="email">Email address</label>
+          <input id="email" name="email" type="email" autocomplete="email" required autofocus>
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="new-password" minlength="12" required>
+          <button class="login-submit" type="submit">Create administrator</button>
+        </form>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

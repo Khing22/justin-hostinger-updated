@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> — stock-pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/products.css">
+</head>
+<body>
+  <div class="app">
+    <%- include("partials/sidebar") %>
+    <main class="main">
+      <%- include("partials/header") %>
+      <section class="content">
+<div class="page-heading"><div><h1>Suppliers</h1><p>Manage supplier contacts and product relationships.</p></div><button class="btn-primary" type="button" id="addSupplierButton">+ Add Supplier</button></div>
+<div class="filters large">
+  <input id="supplierSearch" type="search" placeholder="⌕  Search suppliers...">
+</div>
+<section class="supplier-grid">
+<% suppliers.forEach(s => { %><article class="card supplier-card" data-supplier-id="<%= s.id %>" data-supplier-name="<%= s.name %>" data-supplier-email="<%= s.email %>" data-supplier-phone="<%= s.phone %>" data-supplier-products="<%= s.products %>"><div class="supplier-avatar"><%= s.name.charAt(0) %></div><h2><%= s.name %></h2><p><%= s.email %></p><p><%= s.phone %></p><div class="supplier-footer"><span><%= s.products %> products</span><div class="supplier-actions"><button class="action edit supplier-edit" type="button">Edit</button><button class="action delete supplier-delete" type="button">Delete</button></div></div></article><% }) %>
+</section>
+  <% if (pagination.totalPages > 1) { %>
+  <div class="pagination">
+    <span>Showing <%= pagination.startItem %> - <%= pagination.endItem %> of <%= pagination.totalItems %> suppliers</span>
+    <div>
+      <% if (pagination.currentPage > 1) { %><a class="pagination-button" href="/suppliers?page=<%= pagination.currentPage - 1 %>">&lsaquo;</a><% } %>
+      <% for (let pageNumber = 1; pageNumber <= pagination.totalPages; pageNumber++) { %>
+        <a class="pagination-button <%= pageNumber === pagination.currentPage ? 'active' : '' %>" href="/suppliers?page=<%= pageNumber %>"><%= pageNumber %></a>
+      <% } %>
+      <% if (pagination.currentPage < pagination.totalPages) { %><a class="pagination-button" href="/suppliers?page=<%= pagination.currentPage + 1 %>">&rsaquo;</a><% } %>
+    </div>
+  </div>
+  <% } %>
+
+<section class="card form-card" id="supplierFormCard">
+  <h2 id="supplierFormTitle">Add Supplier</h2>
+  <form method="post" action="/suppliers/create" class="product-form" id="supplierForm">
+    <input type="hidden" id="supplierId" name="supplierId" value="">
+    <label for="supplier-name">Supplier name<input id="supplier-name" name="name" required></label>
+    <label for="supplier-email">Email<input id="supplier-email" name="email" type="email" required></label>
+    <label for="supplier-phone">Phone<input id="supplier-phone" name="phone" required></label>
+    <label for="supplier-products">Products count<input id="supplier-products" name="products" type="number" min="0" value="0"></label>
+    <div class="product-modal-actions">
+      <button class="modal-cancel" type="button" id="cancelSupplierEdit">Cancel</button>
+      <button class="btn-primary product-submit" type="submit">Save Supplier</button>
+    </div>
+  </form>
+</section>
+      </section>
+    </main>
+  </div>
+  <%- include("partials/footer") %>
+</body>
+</html>
